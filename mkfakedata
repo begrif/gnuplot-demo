@@ -1,0 +1,151 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+# usage: onecol( NUMPOINTS [, STYLE] )
+# picks a random number and then jitters from there for N points
+# returns an array of values to be the column of data.
+#   STYLE is optional:
+#        "random"	jitters are very random
+#        "small"	jitters are random, but small (default)
+#        "medium"	jitters are random, but not huge
+#        "trendup"	jitters mostly go up
+#        "trenddown"	jitters mostly go down
+#        "midpeak"	jitters mostly go up to mid way, then down
+#        "midtrough"	jitters mostly go down to mid way, then up
+
+sub onecol {
+  my $n     = shift;
+  my $style = ( shift || 'small' );
+  my $mid   = int($n / 2);
+  my $last;
+  my @points;
+  my %swing;
+
+  return @points if $n < 1;
+
+  $swing{tiny} = 1 + int($n / 50);
+  $swing{small} = 2 + int($n / 25);
+  $swing{medium} = 3 + int($n / 12);
+  $swing{large} = 4 + int($n / 2);
+
+  $last = ( 2 * $n / 5 ) + rand( 3 * $n / 5 );
+
+  $n --;
+  for (0..$n) {
+    if ( $style eq 'random' ) {
+      push(@points, $last);
+      $last += rand($swing{large}) - rand($swing{large});
+      next;
+    }
+    if ( $style eq 'medium' ) {
+      push(@points, $last);
+      $last += rand($swing{medium}) - rand($swing{medium});
+      next;
+    } 
+    if (  ( $style eq 'trendup' )
+       or ( $style eq 'midpeak'   and $_ <  $mid )
+       or ( $style eq 'midtrough' and $_ >= $mid )
+    ) {
+      push(@points, $last);
+      $last += rand($swing{small}) - rand($swing{tiny});
+      next;
+    } 
+    if (  ( $style eq 'trenddown' )
+       or ( $style eq 'midpeak'   and $_ >= $mid )
+       or ( $style eq 'midtrough' and $_ <  $mid )
+    ) {
+      push(@points, $last);
+      $last += rand($swing{tiny}) - rand($swing{small});
+      next;
+    } 
+
+    # fall through (default) 'small'
+    push(@points, $last);
+    $last += rand($swing{small}) - rand($swing{small});
+  }
+
+  return @points;
+} # &onecol()
+
+my @small = onecol( 50, 'small' );
+my @random = onecol( 50, 'random' );
+my @trendup = onecol( 50, 'trendup' );
+my @trenddown = onecol( 50, 'trenddown' );
+my @midpeak = onecol( 50, 'midpeak' );
+my @midtrough = onecol( 50, 'midtrough' );
+
+open( ONE,     '>', "one.data" )       || die;
+print ONE "# index, small variations\n";
+
+open( TWO,     '>', "two.data" )       || die;
+print TWO "# index, small variations, wild variations\n";
+
+open( THREE,   '>', "three.data" )     || die;
+print TWO "# index, small variations, trending further up, trending down\n";
+
+open( FOUR,    '>', "four.data" )      || die;
+print FOUR "# index, trend up, trend down, mid peak, mid trough\n";
+
+open( FIVE,    '>', "five.data" )      || die;
+print FIVE "# index, small variations, wild variations, trend up, trend down, mid peak\n";
+
+open( BETWEEN, '>', "between.data" )   || die;
+print BETWEEN "# index, mid peak, mid trough\n";
+
+open( TIME,    '>', "time.data" )      || die;
+print TIME "# H:MM:SS, trend down, trend up\n";
+
+open( DATE,    '>', "date.data" )      || die;
+my $recent = time() - (60 * 60 * 60 * 24); # 60 days ago
+print DATE "# index, small variations, trending way down, trending up\n";
+
+for (my $n = 0; $n < @small; $n ++) {
+  my $index = $n + 1;
+
+  print ONE "$index\t$small[$n]\n";
+  print TWO "$index, $small[$n], $random[$n]\n";
+
+  my $fake = $small[$n] + $trendup[$n];
+  print THREE "$index; $small[$n]; $fake; $trenddown[$n]\n";
+  print FOUR "$index $trendup[$n] $trenddown[$n] $midpeak[$n] $midtrough[$n]\n";
+  print FIVE "$index $small[$n] $random[$n] $trendup[$n] $trenddown[$n] $midpeak[$n]\n";
+  print BETWEEN "$index\t$midpeak[$n]\t$midtrough[$n]\n";
+
+  my $time = 90 * $n;
+  my @parts = gmtime($time);
+
+  # parts[0] : seconds
+  my $sec = $parts[0];
+  # parts[1] : minutes
+  my $min = $parts[1];
+  # parts[2] : hours; parts[7] days into year
+  my $hour = $parts[2] + (24 * $parts[7]);
+
+  $time = sprintf('%d:%0d:%02d', $hour, $min, $sec);
+  print TIME "$time $trenddown[$n] $trendup[$n]\n";
+
+  $time = $recent + ($n * 60 * 60 * 24);
+  @parts = gmtime($time);
+
+  # parts[3] day of month (starting at 1)
+  my $day = $parts[3];
+  # parts[4] month of year (starting at 0)
+  my $month = 1 + $parts[4];
+  # parts[5] year (starting at 1900)
+  my $year = 1900 + $parts[5];
+  
+  $time = sprintf('%04d-%02d-%02d', $year, $month, $day);
+  $fake = $trenddown[$n] - $small[$n];
+  print DATE "$time, $small[$n], $fake, $trendup[$n]\n";
+
+}
+
+close ONE;
+close TWO;
+close THREE;
+close FOUR;
+close FIVE;
+close BETWEEN;
+close TIME;
+close DATE;
