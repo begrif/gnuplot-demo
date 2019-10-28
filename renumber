@@ -38,5 +38,9 @@ for (reverse @tomove) {
   $num = $1 + $shift;
   $new = sprintf("%0${len}d%s", $num, $2);
 
-  rename($_, $new) or die "$0: $_ -> $new: $!\n";
+  # "git" smart about renames
+  system( 'git', 'mv', $_, $new );
+  if ($? == -1) { die "$0: failed to run 'git mv $_ $new': $!\n" }
+  if ($? & 127) { die "$0: 'git mv $_ $new' died unexpectedly\n" }
+  if (($? >> 8) != 0) { die "$0: 'git mv $_ $new' failed: $!\n"  }
 }
