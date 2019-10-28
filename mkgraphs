@@ -1,0 +1,15 @@
+#!/bin/sh
+
+if [ ! -f "one.data" ] ; then perl mkfakedata || exit ; fi
+
+for f in *.plot ; do
+  outpng=${f%.plot}.png
+  if [ ! -f "$outpng" -o "$f" -nt "$outpng" ] ; then 
+    printf "$f "
+    ( echo "set terminal png"; 
+      echo "set output '$outpng'"; 
+      cat $f
+    ) | gnuplot || exit
+    echo "-> $outpng"
+  fi
+done
