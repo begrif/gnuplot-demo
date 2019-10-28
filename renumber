@@ -1,0 +1,42 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+my $start = shift;
+my $shift = (shift or 1);
+my $num;
+my $new;
+my $len;
+
+if (!$start or $start < 1) {
+  die "usage: renumber NUM [ SHIFT ]; increase plot files by SHIFT starting at NUM\n";
+}
+
+my @tomove;
+opendir(DIR, '.') || die;
+while(defined($_ = readdir(DIR))) {
+  if (/^(\d+)-.+\.plot$/) {
+    $num = $1 - $start;
+
+    # descard before start
+    if ($num < 0) { next; }
+
+    # self-sorting
+    $tomove[$num] = $_;
+  }
+}
+closedir(DIR);
+
+# start from end, to not clobber if description part is the same
+for (reverse @tomove) {
+  /^(\d+)(-.+\.plot)$/;
+
+  # still an issue if 99 gets shifted, but otherwise keeps
+  # numbers the same size by preserving all leading zeros
+  if(!defined($len)) { $len = length($1); }
+
+  $num = $1 + $shift;
+  $new = sprintf("%0${len}d%s", $num, $2);
+
+  rename($_, $new) or die "$0: $_ -> $new: $!\n";
+}
