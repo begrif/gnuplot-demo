@@ -1,0 +1,8 @@
+#!/bin/sh
+
+for f in *.plot ; do
+  outpng="${f%.plot}.png"
+  rm -f "$outpng"
+done
+
+rm -f between.data date.data five.data four.data one.data three.data time.data two.data
