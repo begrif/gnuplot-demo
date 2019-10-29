@@ -13,12 +13,15 @@ use warnings;
 #        "trenddown"	jitters mostly go down
 #        "midpeak"	jitters mostly go up to mid way, then down
 #        "midtrough"	jitters mostly go down to mid way, then up
+#        "hockey"	jitters are ever increasing
+#        "zero-one"	all values between zero and one
 
 sub onecol {
   my $n     = shift;
   my $style = ( shift || 'small' );
   my $mid   = int($n / 2);
   my $last;
+  my $lastup;
   my @points;
   my %swing;
 
@@ -33,6 +36,10 @@ sub onecol {
 
   $n --;
   for (0..$n) {
+    if ( $style eq 'zero-one' ) {
+      push(@points, rand(1));
+      next;
+    }
     if ( $style eq 'random' ) {
       push(@points, $last);
       $last += rand($swing{large}) - rand($swing{large});
@@ -41,6 +48,16 @@ sub onecol {
     if ( $style eq 'medium' ) {
       push(@points, $last);
       $last += rand($swing{medium}) - rand($swing{medium});
+      next;
+    } 
+    if ( $style eq 'hockey' ) {
+      if (!defined($lastup)) {
+         $last = $swing{small};
+	 $lastup = int ( rand($swing{tiny}) );
+      }
+      push(@points, $last);
+      $lastup += int( rand($swing{tiny}) );
+      $last += $lastup;
       next;
     } 
     if (  ( $style eq 'trendup' )
@@ -74,6 +91,10 @@ my @trendup = onecol( 50, 'trendup' );
 my @trenddown = onecol( 50, 'trenddown' );
 my @midpeak = onecol( 50, 'midpeak' );
 my @midtrough = onecol( 50, 'midtrough' );
+my @distibution = map { abs(int($_)) } (onecol( 50, 'hockey' ));
+my @xpts = map { abs(int($_)) } (onecol( 50, 'small' ));
+my @ypts = map { abs(int($_)) } (onecol( 50, 'medium' ));
+my @zeroone = onecol( 50, 'zero-one' );
 
 open( ONE,     '>', "one.data" )       || die;
 print ONE "# index, small variations\n";
@@ -87,8 +108,8 @@ print TWO "# index, small variations, trending further up, trending down\n";
 open( FOUR,    '>', "four.data" )      || die;
 print FOUR "# index, trend up, trend down, mid peak, mid trough\n";
 
-open( FIVE,    '>', "five.data" )      || die;
-print FIVE "# index, small variations, wild variations, trend up, trend down, mid peak\n";
+# open( FIVE,    '>', "five.data" )      || die;
+# print FIVE "# index, small variations, wild variations, trend up, trend down, mid peak\n";
 
 open( BETWEEN, '>', "between.data" )   || die;
 print BETWEEN "# index, mid peak, mid trough\n";
@@ -100,6 +121,12 @@ open( DATE,    '>', "date.data" )      || die;
 my $recent = time() - (60 * 60 * 60 * 24); # 60 days ago
 print DATE "# index, small variations, trending way down, trending up\n";
 
+open( DIST,     '>', "dist.data" )       || die;
+print DIST "# xpoint, ypoint, count\n";
+
+open( ERRORS,     '>', "errors.data" )       || die;
+print ERRORS "# xpoint, ypoint, errorsize\n";
+
 for (my $n = 0; $n < @small; $n ++) {
   my $index = $n + 1;
 
@@ -109,7 +136,7 @@ for (my $n = 0; $n < @small; $n ++) {
   my $fake = $small[$n] + $trendup[$n];
   print THREE "$index; $small[$n]; $fake; $trenddown[$n]\n";
   print FOUR "$index $trendup[$n] $trenddown[$n] $midpeak[$n] $midtrough[$n]\n";
-  print FIVE "$index $small[$n] $random[$n] $trendup[$n] $trenddown[$n] $midpeak[$n]\n";
+  # print FIVE "$index $small[$n] $random[$n] $trendup[$n] $trenddown[$n] $midpeak[$n]\n";
   print BETWEEN "$index\t$midpeak[$n]\t$midtrough[$n]\n";
 
   my $time = 90 * $n;
@@ -139,13 +166,21 @@ for (my $n = 0; $n < @small; $n ++) {
   $fake = $trenddown[$n] - $small[$n];
   print DATE "$time, $small[$n], $fake, $trendup[$n]\n";
 
+  # this gets out of hand quickly
+  if( $n < 20 ) {
+    print DIST "$xpts[$n] $ypts[$n] $distibution[$n]\n";
+  }
+
+  print ERRORS "$xpts[$n] $ypts[$n] $zeroone[$n]\n"
 }
 
 close ONE;
 close TWO;
 close THREE;
 close FOUR;
-close FIVE;
+# close FIVE;
 close BETWEEN;
 close TIME;
 close DATE;
+close DIST;
+close ERRORS;
