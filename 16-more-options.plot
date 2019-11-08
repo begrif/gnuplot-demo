@@ -6,6 +6,8 @@ set grid
 # put the key by the bottom margin, centered, horizontal layout,
 # blue text
 set key bmargin center horizontal textcolor rgb "blue"
+# for gnuplot 4.2, no blue text:
+# set key bmargin center horizontal
 
 # formating of the numbers on left
 set ytics format "%03.1f"
