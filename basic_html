@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html><head>
+<title>gnuplot example: <<<TITLE>>></title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style type=text/css><!--
+Body {background:white; color: black; }
+H1 { font-weight: bold; font-size: 18px }
+H2 { font-weight: normal; font-size: 18px }
+Pre { background-color: black; color: #ed9430;  border: 1px dashed gray;
+      font-weight: bold; font-family: courier,monospace;
+      padding: 0px 5px 20px 5px; margin: 10px 5px 10px 15px; }
+Code { font-weight: bold; font-family: courier,monospace; }
+
+:link { color: blue; } 
+:link:hover {color:red;}
+:link:visited {color:red;}
+--></style>
+</head>
+<body>
+<h1>gnuplot example: <<<TITLE>>></h1>
+<div class="graph">
+<div class="graph_pre">The graph</div>
+<div class="graph_image">
+<img src="<<<PNG>>>" alt="<<<TITLE>>>" />
+</div>
+</div>
+<div class="source">
+<div class="source_pre">Source code to generate it:</div>
+<pre>
+<<<PLOT>>>
+</pre>
+</div>
+<div class="source_post">
+ Example data files:
+ <ul>
+  <<<PREDATA>>><li><a href="<<<DATA>>>"><code><<<DATA>>></code></a></li><<<POSTDATA>>>
+ </ul>
+</div>
+</div>
+</body>
+</html>

@@ -2,7 +2,8 @@
 
 for f in *.plot ; do
   outpng="${f%.plot}.png"
-  rm -f "$outpng"
+  outhtml="${f%.plot}.html"
+  rm -f "$outpng" "$outhtml"
 done
 
 datafiles=$(perl -wlne 'if(/\b(\w[\w-]*[.]data)\b/) { print $1 } ' mkfakedata)

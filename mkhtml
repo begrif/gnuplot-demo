@@ -1,0 +1,88 @@
+#!/usr/bin/perl
+use warnings;
+use strict;
+use autodie;
+
+use vars qw/ $template @examples /;
+
+# config {
+$template = 'basic_html';
+
+# }
+
+
+@examples = findplots();
+
+for my $file (@examples) {
+  my $plot = readfile($file);
+  my @data;
+
+  $file =~ s/(.*)\.plot/$1.html/ or die "$0: no plot in plot file $file\n";
+  my $png = "$1.png";
+  my $title = $1;
+  $title =~ tr:-_:  :s;
+
+  # strip all trailing newlines
+  while ( chomp $plot ) {} 
+  @data = ($plot =~ /\b(\w[\w-]*.data)\b/g);
+
+  $plot =~ s,&,&amp;,g;
+  $plot =~ s,<,&lt;,g;
+  $plot =~ s,>,&gt;,g;
+
+  my $html = readfile($template);
+  $html =~ s,<<<TITLE>>>,$title,g;
+  $html =~ s,<<<PNG>>>,$png,g;
+  $html =~ s,<<<PLOT>>>,$plot,g;
+
+  # data is "sorted" in order of use in plot file
+  if( $html =~ m,<<<PREDATA>>>(.*?)<<<POSTDATA>>>,s ) {
+    my $datablock = $1;
+    my %used;
+    for my $data (@data) {
+      if(!exists($used{$data})) {
+	$used{$data} = $datablock;
+	$used{$data} =~ s,<<<DATA>>>,$data,g;
+
+	# replace the block, then build a new one
+	$html =~ s,<<<PREDATA>>>$datablock<<<POSTDATA>>>,$used{$data}<<<PREDATA>>>$datablock<<<POSTDATA>>>,s;
+      }
+    }
+    # finally remove the extra
+    $html =~ s,<<<PREDATA>>>.*<<<POSTDATA>>>,,gs;
+  }
+
+  open(my $fh, '>', $file);
+  print $fh $html;
+}
+
+exit;
+
+sub readfile {
+  my $name = shift;
+  # local filehandle gets autoclosed when goes out of scope
+  my $fh;
+
+  open($fh, '<', $name); # autodie in effect
+ 
+  # use whole file slurp mode
+  local $/ = undef;
+
+  # return the contents of the file
+  return <$fh>;
+} # &readfile()
+
+sub findplots {
+  # local directory handle gets autoclosed when goes out of scope
+  my $dh;
+  my @plots;
+  opendir($dh, '.');
+  while(defined( $_ = readdir($dh) )) {
+    # we only watch it for the plot
+    if (/^\w.*\.plot$/) {
+      push(@plots, $_);
+    }
+  }
+  # the names are designed to sort well
+  return sort { $a cmp $b } (@plots);
+} # &findplots()
