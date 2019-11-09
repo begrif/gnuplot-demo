@@ -129,8 +129,11 @@ print ERRORS "# xpoint, ypoint, errorsize\n";
 
 open( BAR,     '>', "bar.data" )       || die;
 print BAR "# x, y, xlabel\n";
-
 my %bardist;
+
+open( LOG,     '>', "log.data" )       || die;
+print LOG "# n, hockey\n";
+
 
 for (my $n = 0; $n < @small; $n ++) {
   my $index = $n + 1;
@@ -178,7 +181,9 @@ for (my $n = 0; $n < @small; $n ++) {
   # but save all uniq xpts for the bar chart
   $bardist{"$xpts[$n]"} = [ $ypts[$n], $distibution[$n] ];
 
-  print ERRORS "$xpts[$n] $ypts[$n] $zeroone[$n]\n"
+  print ERRORS "$xpts[$n] $ypts[$n] $zeroone[$n]\n";
+
+  print LOG "$index $distibution[$n]\n";
 }
 
 # sort by label
@@ -197,3 +202,17 @@ close DATE;
 close DIST;
 close ERRORS;
 close BAR;
+close LOG;
+
+# very small data set for paired bars
+# https://en.wikipedia.org/wiki/Alice_and_Bob#Cast_of_characters
+open(  BAR2,    '>', "bar2.data" )       || die;
+printf(BAR2  "0\t%f\tAlice\n",   20 + rand(5));
+printf(BAR2  "0.5\t%f\tAlice\n", 25 + rand(5));
+print  BAR2 "\n";
+printf(BAR2  "2\t%f\tBob\n",   20 + rand(5));
+printf(BAR2  "2.5\t%f\tBob\n", 25 + rand(5));
+print  BAR2 "\n";
+printf(BAR2  "4\t%f\tCharlie\n",   20 + rand(5));
+printf(BAR2  "4.5\t%f\tCharlie\n", 25 + rand(5));
+close  BAR2;
