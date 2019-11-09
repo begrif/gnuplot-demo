@@ -5,4 +5,5 @@ for f in *.plot ; do
   rm -f "$outpng"
 done
 
-rm -f between.data date.data five.data four.data one.data three.data time.data two.data
+datafiles=$(perl -wlne 'if(/\b(\w[\w-]*[.]data)\b/) { print $1 } ' mkfakedata)
+rm -f $datafiles
