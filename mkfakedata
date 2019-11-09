@@ -103,7 +103,7 @@ open( TWO,     '>', "two.data" )       || die;
 print TWO "# index, small variations, wild variations\n";
 
 open( THREE,   '>', "three.data" )     || die;
-print TWO "# index, small variations, trending further up, trending down\n";
+print THREE "# index, small variations, trending further up, trending down\n";
 
 open( FOUR,    '>', "four.data" )      || die;
 print FOUR "# index, trend up, trend down, mid peak, mid trough\n";
