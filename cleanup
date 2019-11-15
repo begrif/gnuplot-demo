@@ -7,4 +7,4 @@ for f in *.plot ; do
 done
 
 datafiles=$(perl -wlne 'if(/\b(\w[\w-]*[.]data)\b/) { print $1 } ' mkfakedata)
-rm -f $datafiles
+rm -f fit.log $datafiles
